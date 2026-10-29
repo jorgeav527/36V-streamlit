@@ -2,6 +2,7 @@ from datetime import date
 
 import pandas as pd
 import streamlit as st
+import matplotlib.pyplot as plt
 
 
 st.set_page_config(page_title="Cibertec-36V", layout="wide", page_icon="📊")
@@ -9,6 +10,31 @@ st.set_page_config(page_title="Cibertec-36V", layout="wide", page_icon="📊")
 st.markdown(
     """
     <style>
+    /* ============= Tab DATA · Catppuccin Latte (light) ============= */
+    .st-key-data_chart {
+        padding: 0.75rem;
+        border-radius: 16px;
+        border: 1px solid #ccd0da;                     /* Surface0 */
+        background: #eff1f5;                           /* Base     */
+        box-shadow: 0 8px 24px rgba(76, 79, 105, 0.12); /* Text    */
+        transition: border-color 0.25s ease,
+                    box-shadow 0.25s ease,
+                    transform 0.25s ease;
+    }
+
+    .st-key-data_chart:hover {
+        transform: translateY(-3px);
+        border-color: #1e66f5;                         /* Blue     */
+        box-shadow: 0 14px 34px rgba(30, 102, 245, 0.15),
+                    0 8px 24px rgba(76, 79, 105, 0.12);
+    }
+
+    .st-key-data_chart [data-testid="stImage"] img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -18,7 +44,9 @@ st.title("🚀 Basic - class: Streamlit para Data Analytics")
 
 st.divider()
 
-tab_intro, tab_media = st.tabs(["📝 Intro", "🖼️ Media"])
+tab_intro, tab_media, tab_info, tab_data = st.tabs(
+    ["📝 Intro", "🖼️ Media", "ℹ️ Info", "DATA"]
+)
 
 with tab_intro:
     col_t1, col_t2 = st.columns([2, 1])
@@ -102,35 +130,127 @@ with st.sidebar:
 
     btn_generar = st.button("🚀 Generar Resumen", use_container_width=True)
 
-st.header("🕹️ Centro de Control de Usuario")
-if btn_generar:
-    if not user_name:
-        st.error("⚠️ Debes ingresar un nombre en el panel lateral.")
+with tab_info:
+    st.header("🕹️ Centro de Control de Usuario")
+    if btn_generar:
+        if not user_name:
+            st.error("⚠️ Debes ingresar un nombre en el panel lateral.")
+        else:
+            st.balloons()
+
+            with st.expander("📄 EXPEDIENTE DEL ANALISTA", expanded=True):
+                st.markdown(f"### ANALISTA: {user_name.upper()}")
+
+                # Fila 1: Datos Técnicos
+                c1, c2, c3 = st.columns(3)
+                c3.write(f"**Edad:** {edad} años")
+                c2.write(f"**Stack:** {lenguajes}")
+                c1.write(f"**Nivel:** {nivel}")
+
+                # Fila 2: Fechas y Archivos
+                d1, d2, d3 = st.columns(3)
+                d1.write(f"**Fecha:** {fecha_analisis.strftime('%d/%m/%Y')}")
+                d2.write(f"**Estado Civil:** {civil_state}")
+                d3.write(f"**Color Elegido:** {color_fav}")
+
+                st.divider()
+
+                if notas:
+                    st.markdown("**Observaciones:**")
+                    st.info(notas)
+
+                st.success("Informe generado y certificado exitosamente.")
+
     else:
-        st.balloons()
+        st.info(
+            "👈 Configura todos los parámetros en el Sidebar para ver el resultado."
+        )
 
-        with st.expander("📄 EXPEDIENTE DEL ANALISTA", expanded=True):
-            st.markdown(f"### ANALISTA: {user_name.upper()}")
+with tab_data:
+    st.header("🧪 Análisis Avanzado")
+    uploaded_file = st.file_uploader("Sube tu propio dataset (CSV)", type="csv")
 
-            # Fila 1: Datos Técnicos
-            c1, c2, c3 = st.columns(3)
-            c3.write(f"**Edad:** {edad} años")
-            c2.write(f"**Stack:** {lenguajes}")
-            c1.write(f"**Nivel:** {nivel}")
+    if uploaded_file:
+        data = pd.read_csv(uploaded_file)
+        st.success("¡Dataset listo para análisis!")
 
-            # Fila 2: Fechas y Archivos
-            d1, d2, d3 = st.columns(3)
-            d1.write(f"**Fecha:** {fecha_analisis.strftime('%d/%m/%Y')}")
-            d2.write(f"**Estado Civil:** {civil_state}")
-            d3.write(f"**Color Elegido:** {color_fav}")
+        st.subheader("📈 Comparativa de Esperanza de Vida")
+        paises_disponibles = sorted(data["country"].unique())
 
-            st.divider()
+        paises_sel = st.multiselect(
+            "Selecciona los países a comparar:",
+            options=paises_disponibles,
+            default=["Mexico", "Spain"],
+        )
 
-            if notas:
-                st.markdown("**Observaciones:**")
-                st.info(notas)
+        if paises_sel:
+            fig, ax = plt.subplots(figsize=(10, 5), dpi=150)
 
-            st.success("Informe generado y certificado exitosamente.")
+            with st.expander("📊 Ver tabla comparativa de selección"):
+                df_comp = data[data["country"].isin(paises_sel)]
+                st.dataframe(
+                    df_comp.sort_values(["year", "country"]), width="stretch"
+                )
 
-else:
-    st.info("👈 Configura todos los parámetros en el Sidebar para ver el resultado.")
+            paleta = [
+                "#1e66f5",  # Blue
+                "#40a02b",  # Green
+                "#df8e1d",  # Yellow
+                "#fe640b",  # Peach
+                "#ea76cb",  # Pink
+                "#8839ef",  # Mauve
+                "#179299",  # Teal
+                "#d20f39",  # Red
+            ]
+
+            for i, pais in enumerate(paises_sel):
+                df_pais = data[data["country"] == pais]
+                color = paleta[i % len(paleta)]
+                ax.plot(
+                    df_pais["year"],
+                    df_pais["lifeExp"],
+                    color=color,
+                    marker="o",
+                    markersize=5,
+                    markeredgecolor="#eff1f5",
+                    markeredgewidth=1.2,
+                    linewidth=2.4,
+                    label=pais,  # Etiqueta para la leyenda
+                )
+
+            ax.set_title(
+                "Evolución de la Esperanza de Vida",
+                fontsize=15,
+                fontweight="bold",
+                color="#4c4f69",  # Text
+                loc="left",
+                pad=18,
+            )
+            ax.set_xlabel("Año", fontsize=11, color="#6c6f85")  # Subtext0
+            ax.set_ylabel("Años de Vida", fontsize=11, color="#6c6f85")
+
+            ax.grid(
+                True, linestyle="--", linewidth=0.7, alpha=0.8, color="#ccd0da"
+            )
+            ax.set_axisbelow(True)
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+            ax.spines["left"].set_color("#ccd0da")
+            ax.spines["bottom"].set_color("#ccd0da")
+            ax.tick_params(colors="#6c6f85", labelsize=10)  # Subtext0
+
+            leg = ax.legend(
+                title="Países",
+                frameon=False,
+                loc="upper left",
+                fontsize=10,
+                labelcolor="#4c4f69",
+            )
+            leg.get_title().set_color("#6c6f85")
+
+            fig.patch.set_facecolor("#eff1f5")
+            ax.set_facecolor("#eff1f5")
+            fig.tight_layout()
+
+            with st.container(key="data_chart"):
+                st.pyplot(fig, clear_figure=True)

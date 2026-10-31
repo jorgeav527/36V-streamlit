@@ -5,6 +5,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 
 from api_kpis import plot_kpis
+from altair_chart import plot_altair_insights
 
 
 st.set_page_config(page_title="Cibertec-36V", layout="wide", page_icon="📊")
@@ -13,7 +14,8 @@ st.markdown(
     """
     <style>
     /* ============= Tab DATA · Catppuccin Latte (light) ============= */
-    .st-key-data_chart {
+    .st-key-data_chart,
+    .st-key-data_altair {
         padding: 0.75rem;
         border-radius: 16px;
         border: 1px solid #ccd0da;                     /* Surface0 */
@@ -24,7 +26,8 @@ st.markdown(
                     transform 0.25s ease;
     }
 
-    .st-key-data_chart:hover {
+    .st-key-data_chart:hover,
+    .st-key-data_altair:hover {
         transform: translateY(-3px);
         border-color: #1e66f5;                         /* Blue     */
         box-shadow: 0 14px 34px rgba(30, 102, 245, 0.15),
@@ -82,8 +85,8 @@ st.title("🚀 Basic - class: Streamlit para Data Analytics")
 
 st.divider()
 
-tab_intro, tab_media, tab_info, tab_data = st.tabs(
-    ["📝 Intro", "🖼️ Media", "ℹ️ Info", "DATA"]
+tab_intro, tab_media, tab_info, tab_data, tab_graficos = st.tabs(
+    ["📝 Intro", "🖼️ Media", "ℹ️ Info", "DATA", "GRAFICOS"]
 )
 
 with tab_intro:
@@ -213,7 +216,7 @@ with tab_data:
         data = pd.read_csv(uploaded_file)
         st.success("¡Dataset listo para análisis!")
 
-        plot_kpis(df=data)
+        plot_kpis(data)
 
         st.subheader("📈 Comparativa de Esperanza de Vida")
         paises_disponibles = sorted(data["country"].unique())
@@ -291,3 +294,26 @@ with tab_data:
 
             with st.container(key="data_chart"):
                 st.pyplot(fig, clear_figure=True)
+
+        st.divider()
+        st.subheader("🌍 Insights por continente")
+
+        if "continent" in data.columns:
+            col_a, col_b = st.columns(2)
+
+            with col_a:
+                continentes = sorted(data["continent"].dropna().unique())
+                continente_sel = st.selectbox("Continente:", continentes)
+
+            with col_b:
+                anios = sorted(data["year"].dropna().unique(), reverse=True)
+                anio_sel = st.selectbox("Año:", anios)
+
+            df_filtrado = data[
+                (data["continent"] == continente_sel) & (data["year"] == anio_sel)
+            ]
+
+            with st.container(key="data_altair"):
+                plot_altair_insights(df_filtrado, continente_sel)
+        else:
+            st.warning("El dataset no tiene columna 'continent'.")

@@ -8,8 +8,10 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "altair[all]>=6.2.2",
     "matplotlib>=3.10.9",
     "pandas>=2.3.3",
+    "requests>=2.34.2",
     "streamlit>=1.65.0",
 ]
 

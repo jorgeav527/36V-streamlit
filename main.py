@@ -4,6 +4,8 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
+from api_kpis import plot_kpis
+
 
 st.set_page_config(page_title="Cibertec-36V", layout="wide", page_icon="📊")
 
@@ -34,6 +36,42 @@ st.markdown(
         width: 100%;
         height: auto;
         border-radius: 10px;
+    }
+
+    /* ================== KPI cards · Catppuccin Latte ================== */
+    .kpi-card {
+        padding: 1rem 1.15rem 1.05rem;
+        border-radius: 14px;
+        border: 1px solid #ccd0da;                      /* Surface0 */
+        background: #eff1f5;                            /* Base     */
+        box-shadow: 0 4px 14px rgba(76, 79, 105, 0.08);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .kpi-card:hover {
+        border-color: #1e66f5;                          /* Blue */
+        box-shadow: 0 8px 22px rgba(30, 102, 245, 0.14);
+    }
+
+    .kpi-title {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6c6f85;                                 /* Subtext0 */
+        margin-bottom: 0.35rem;
+    }
+
+    .kpi-value {
+        font-size: clamp(1.6rem, 2.2vw, 2rem);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #4c4f69;                                 /* Text */
+        font-variant-numeric: tabular-nums;
     }
     </style>
     """,
@@ -127,6 +165,7 @@ with st.sidebar:
         "Notas Adicionales", placeholder="Escribe observaciones aquí..."
     )
     acepto = st.checkbox("Certificar información", value=True)
+    print(lenguajes)
 
     btn_generar = st.button("🚀 Generar Resumen", use_container_width=True)
 
@@ -174,6 +213,8 @@ with tab_data:
         data = pd.read_csv(uploaded_file)
         st.success("¡Dataset listo para análisis!")
 
+        plot_kpis(df=data)
+
         st.subheader("📈 Comparativa de Esperanza de Vida")
         paises_disponibles = sorted(data["country"].unique())
 
@@ -188,9 +229,7 @@ with tab_data:
 
             with st.expander("📊 Ver tabla comparativa de selección"):
                 df_comp = data[data["country"].isin(paises_sel)]
-                st.dataframe(
-                    df_comp.sort_values(["year", "country"]), width="stretch"
-                )
+                st.dataframe(df_comp.sort_values(["year", "country"]), width="stretch")
 
             paleta = [
                 "#1e66f5",  # Blue
@@ -229,9 +268,7 @@ with tab_data:
             ax.set_xlabel("Año", fontsize=11, color="#6c6f85")  # Subtext0
             ax.set_ylabel("Años de Vida", fontsize=11, color="#6c6f85")
 
-            ax.grid(
-                True, linestyle="--", linewidth=0.7, alpha=0.8, color="#ccd0da"
-            )
+            ax.grid(True, linestyle="--", linewidth=0.7, alpha=0.8, color="#ccd0da")
             ax.set_axisbelow(True)
             ax.spines["top"].set_visible(False)
             ax.spines["right"].set_visible(False)
